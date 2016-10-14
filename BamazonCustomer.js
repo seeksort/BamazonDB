@@ -1,5 +1,6 @@
 var mysql = require('mysql');
 var prompt = require('prompt');
+var sqlkey = require('./sqlkey.js')
 
 var queryCols1 = [['ItemID', 'ProductName', 'Price', 'StockQuantity']];
 var queryCols2 = [['ItemID', 'ProductName', 'Price']];
@@ -9,7 +10,7 @@ var connection = mysql.createConnection({
     host: 'localhost',
     port: 3306,
     user: 'root',
-    password: 'k0@!@wala9',
+    password: sqlkey.key,
     database: 'Bamazon'
 });
 
