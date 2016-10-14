@@ -1,6 +1,10 @@
 var mysql = require('mysql');
 var prompt = require('prompt');
 
+var queryCols1 = [['ItemID', 'ProductName', 'Price', 'StockQuantity']];
+var queryCols2 = [['ItemID', 'ProductName', 'Price']];
+var requestedUnits, requestedID, availableQty;
+
 var connection = mysql.createConnection({
     host: 'localhost',
     port: 3306,
@@ -8,6 +12,24 @@ var connection = mysql.createConnection({
     password: 'k0@!@wala9',
     database: 'Bamazon'
 });
+
+// Pass in properties to prompt module on lines 76 and 77 
+var schema = {
+    properties: {
+        productID: {
+            description: 'Please enter the ID of the product you wish to purchase.',
+            pattern: /^[\d\w]+$/,
+            message: 'ID must be numerical.',
+            required: true
+        },
+        units: {
+            description: 'Please enter the quantity of units you would like to purchase. We will check our inventory and let you know if the total is available.',
+            pattern: /^[\d\w]+$/,
+            message: 'Quantity must be numerical.',
+            required: true
+        }
+    }
+};
 
 //Check connection
 connection.connect(function(err){
@@ -36,90 +58,82 @@ connection.query('INSERT INTO Bamazon.Products (ProductName, DepartmentName, Pri
 });
 */
 
-// Pass in properties to prompt module
-var schema = {
-    properties: {
-        productID: {
-            description: 'Please enter the ID of the product you wish to purchase.',
-            pattern: /^[\d\w]+$/,
-            message: 'ID must be numerical.',
-            required: true
-        },
-        units: {
-            description: 'Please enter the quantity of units you would like to purchase. We will check our inventory and let you know if the total is available.',
-            pattern: /^[\d\w]+$/,
-            message: 'Quantity must be numerical.',
-            required: true
+// Reads db then passes result to passed in callback
+function readDB(args, callback) {
+    connection.query('SELECT ?? FROM Bamazon.Products', args, function(err, res) {
+        if (err) {
+            console.log(err);
         }
-    }
-};
+        else {
+            callback(res);
+        }
+    });
+}
 
-function getCustOrder() {
+// Ask for order, then read DB, then execute evaluation callback
+function getCustOrder(results) {
+    console.log(results)
     prompt.start();
     prompt.get(schema, function(err, res) {
         if (err) {
             console.log(err);
         }
         else {
-            console.log('productId: '+res.productID);
-            console.log('units: '+res.units);
-            connection.query('SELECT ItemID, ProductName, StockQuantity FROM Bamazon.Products WHERE ?', {ItemID: res.productID}, function(err2, res2) {
-                if (err2) {
-                    console.log(err2);
-                }
-                else if (res2[0].StockQuantity < res.units) {
-                    console.log('Sorry, we do not have enough of ' + res2[0].ProductName + ' in stock.');
-                    connection.end();
-                }
-                else {
-                    console.log(res2[0].ProductName + ' is available!\n');
-                    // Waiting animation for customer
-                    var counter = 0;
-                    var output = 'Grabbing your order';
-                    var interval = setInterval(function() {
-                        if (counter < 3) {
-                            output += '. ';
-                            process.stdout.write(output +'\r');
-                            counter++;
-                        }
-                        else {
-                            process.stdout.write(output +'Done!\n');
-                            clearInterval(interval);
-                            // Update database
-                            var requestedUnits = res.units;
-                            var newQty = res2[0].StockQuantity - requestedUnits;
-                            connection.query('UPDATE Bamazon.Products SET StockQuantity = ? WHERE ItemID = ?', [newQty, res.productID], function(err3, res3) {
-                                if (err3) {
-                                    console.log(err3);
-                                }
-                                else {
-                                    connection.query('SELECT ItemID, ProductName, Price, StockQuantity FROM Bamazon.Products WHERE ?', {ItemID: res.productID}, function(err4, res4) {
-                                        if (err4) {
-                                            console.log(err4);
-                                        }
-                                        else {
-                                            console.log('=== Total Purchase ===\n' + 'Product: ' + res4[0].ProductName + '\nQty Purchased: ' + requestedUnits + '\nTotal: $' + (requestedUnits*res4[0].Price).toFixed(2));
-                                        }
-                                        connection.end();
-                                    });
-                                }
-                            });
-                            
-                        }
-                    }, 500);
-                }
+            requestedUnits = res.units;
+            requestedID = res.productID;
+            console.log('productId: '+ requestedID);
+            console.log('units: '+ requestedUnits);
+            readDB(queryCols1, evalCurrentStock);
+        };
+    });
+}
+
+// Evalutate stock pulled from DB
+function evalCurrentStock(results) {
+    availableQty = results[0].StockQuantity
+    if (availableQty < requestedUnits) {
+        console.log('Sorry, we do not have enough of ' + results[0].ProductName + ' in stock.');
+        connection.end();
+    }
+    else {
+        console.log(results[0].ProductName + ' is available!\n');
+        waitingAnimation(processOrder);
+    }
+}
+
+// Waiting animation for customer
+function waitingAnimation(callback) {
+    var counter = 0;
+    var output = 'Grabbing your order';
+    var interval = setInterval(function() {
+        if (counter < 3) {
+            output += '. ';
+            process.stdout.write(output +'\r');
+            counter++;
+        }
+        else {
+            process.stdout.write(output +'Done!\n');
+            clearInterval(interval);
+            callback();
+        }
+    }, 500);
+}
+
+// Update database and show customer bill
+function processOrder() {
+    var newQty = availableQty - requestedUnits;
+    connection.query('UPDATE Bamazon.Products SET StockQuantity = ? WHERE ItemID = ?', [newQty, requestedID], function(err3, res3) {
+        if (err3) {
+            console.log(err3);
+        }
+        else {
+            readDB(queryCols1, function(result) {
+                console.log('=== Total Purchase ===\n' + 'Product: ' + result[0].ProductName + '\nQty Purchased: ' + requestedUnits + '\nTotal: $' + (requestedUnits*result[0].Price).toFixed(2));
+                connection.end();
             });
         }
     });
 }
-
+        
 // Read, then launch prompts & queries
-connection.query('SELECT ItemID, ProductName, Price FROM Bamazon.Products', function(err, res) {
-    if (err) {
-        console.log(err);
-    }
-    else {
-        console.log(res)
-    }
-    getCustOrder();
-});
+readDB(queryCols2, getCustOrder);
