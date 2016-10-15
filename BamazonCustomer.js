@@ -19,13 +19,13 @@ var schema = {
     properties: {
         productID: {
             description: 'Please enter the ID of the product you wish to purchase.',
-            pattern: /^[\d\w]+$/,
+            pattern: /^[\d]+$/,
             message: 'ID must be numerical.',
             required: true
         },
         units: {
             description: 'Please enter the quantity of units you would like to purchase. We will check our inventory and let you know if the total is available.',
-            pattern: /^[\d\w]+$/,
+            pattern: /^[\d]+$/,
             message: 'Quantity must be numerical.',
             required: true
         }

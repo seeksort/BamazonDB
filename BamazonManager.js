@@ -20,7 +20,6 @@ connection.connect(function(err){
     if (err) throw err;
     console.log('connected as id ' + connection.threadId);
     promptUserMain();
-    // addToInv();
 });
 
 function viewProducts(callback) {
@@ -117,24 +116,24 @@ function addNewProduct() {
         message: 'Please enter department for new product.',
         name: 'newProductDept'
     }, {
-        type: 'input',
+        type: 'number',
         message: 'Please enter price of new product.',
-        // validate: function(input){
-        //     if (typeof input !== 'number') {
-        //         console.log('Please enter a number.')
-        //     }
-        //     return (typeof input === 'number');
-        // },
+        validate: function(input){
+            if ((input.search(/^[\d\.]+$/)) === -1) {
+                console.log('Please enter a number.')
+            }
+            return (input.search(/^[\d\.]+$/) !== -1);
+        },
         name: 'newProductPrc'
     }, {
         type: 'input',
         message: 'Please enter inventory quantity of new product.',
-        // validate: function(input){
-        //     if (typeof (parseInt(input)) !== 'number') {
-        //         console.log('Please enter a number.')
-        //     }
-        //     return (typeof input === 'number');
-        // },
+        validate: function(input){
+            if ((input.search(/^[\d]+$/)) === -1) {
+                console.log('Please enter a whole number.')
+            }
+            return (input.search(/^[\d]+$/) !== -1);
+        },
         name: 'newProductQty'
     }]).then(function(ans){
         var newProductName = ans.newProductName;
