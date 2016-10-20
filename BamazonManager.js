@@ -1,3 +1,4 @@
+// ==== Challenge #2: Manager View ====
 var mysql = require('mysql');
 var inquirer = require('inquirer');
 var sqlkey = require('./sqlkey.js')
@@ -83,6 +84,7 @@ function addToInv() {
             if (err) throw err;
             else {
                 newTotal = parseInt(ans[0].StockQuantity) + parseInt(amtToIncrease);
+                // validate user choices
                 inquirer.prompt([{
                     type: 'list',
                     message: 'User requested to increase ' + chosenProduct + ' by ' + amtToIncrease + ' for a new total of '+ newTotal + '. Proceed?',
@@ -140,6 +142,7 @@ function addNewProduct() {
         var newProductDept = ans.newProductDept;
         var newProductPrc = ans.newProductPrc;
         var newProductQty = ans.newProductQty;
+        // validate user choices
         inquirer.prompt([{
             type: 'list',
             message: 'User requested to add ' + newProductName + ' in ' + newProductDept + ' department, with a unit price of $' + newProductPrc + ', and an initial inventory of ' + newProductQty+ '. Proceed?',
@@ -212,7 +215,3 @@ function continueApp() {
         }
     });
 }
-
-
-
-

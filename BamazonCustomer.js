@@ -1,10 +1,10 @@
 var mysql = require('mysql');
 var prompt = require('prompt');
-var sqlkey = require('./sqlkey.js')
+var sqlkey = require('./sqlkey.js');
 
-var queryCols1 = [['ItemID', 'ProductName', 'Price', 'StockQuantity']];
+var queryCols1 = [['ItemID', 'DepartmentName', 'ProductName', 'Price', 'StockQuantity']];
 var queryCols2 = [['ItemID', 'ProductName', 'Price']];
-var requestedUnits, requestedID, availableQty;
+var requestedUnits, requestedID, availableQty, currentDept, transactionSalesTots;
 
 var connection = mysql.createConnection({
     host: 'localhost',
@@ -18,13 +18,13 @@ var connection = mysql.createConnection({
 var schema = {
     properties: {
         productID: {
-            description: 'Please enter the ID of the product you wish to purchase.',
+            description: 'Please enter the ID of the product you wish to purchase',
             pattern: /^[\d]+$/,
             message: 'ID must be numerical.',
             required: true
         },
         units: {
-            description: 'Please enter the quantity of units you would like to purchase. We will check our inventory and let you know if the total is available.',
+            description: 'Please enter the quantity of units you would like to purchase. We will check our inventory and let you know if the total is available',
             pattern: /^[\d]+$/,
             message: 'Quantity must be numerical.',
             required: true
@@ -129,12 +129,38 @@ function processOrder() {
         }
         else {
             readDB(queryCols1, function(result) {
-                console.log('=== Total Purchase ===\n' + 'Product: ' + result[0].ProductName + '\nQty Purchased: ' + requestedUnits + '\nTotal: $' + (requestedUnits*result[0].Price).toFixed(2));
-                connection.end();
+                currentDept = result[0].DepartmentName;
+                transactionSalesTot = requestedUnits * result[0].Price;
+                console.log('=== Total Purchase ===\n' + 'Product: ' + result[0].ProductName + '\nQty Purchased: ' + requestedUnits + '\nTotal: $' + transactionSalesTot.toFixed(2));
+                addTotalSales();
             });
         }
     });
 }
+
+// BamazonExecutive
+function addTotalSales() {
+    connection.query('SELECT * FROM Bamazon.Departments', function(err, res) {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            for (var i = 0; i < res.length; i++) {
+                if (res[i].DepartmentName === currentDept) {
+                    transactionSalesTot += res[i].TotalSales;
+                    console.log(res[i])
+                    connection.query('UPDATE Bamazon.Departments SET TotalSales = ? WHERE DepartmentName = ?', [transactionSalesTot, currentDept], function(err4, res4) {
+                        if (err4) {
+                            console.log(err4);
+                        }
+                    });
+                }
+            }
+            connection.end();
+        }
+    });
+}
+
         
 // Read, then launch prompts & queries
 readDB(queryCols2, getCustOrder);
