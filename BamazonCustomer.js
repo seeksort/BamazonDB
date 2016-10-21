@@ -4,7 +4,7 @@ var sqlkey = require('./sqlkey.js');
 
 var queryCols1 = [['ItemID', 'DepartmentName', 'ProductName', 'Price', 'StockQuantity']];
 var queryCols2 = [['ItemID', 'ProductName', 'Price']];
-var requestedUnits, requestedID, availableQty, currentDept, transactionSalesTots;
+var requestedUnits, requestedID, requestedItem, availableQty, currentDept, transactionSalesTots, currentPrice;
 
 var connection = mysql.createConnection({
     host: 'localhost',
@@ -91,13 +91,20 @@ function getCustOrder(results) {
 
 // Evalutate stock pulled from DB
 function evalCurrentStock(results) {
-    availableQty = results[0].StockQuantity
+    results.forEach(function(item) {
+        if (item.ItemID.toString() === requestedID.toString()) {
+            availableQty = item.StockQuantity;
+            requestedItem = item.ProductName;
+            currentDept = item.DepartmentName;
+            return; 
+        } 
+    });
     if (availableQty < requestedUnits) {
         console.log('Sorry, we do not have enough of ' + results[0].ProductName + ' in stock.');
         connection.end();
     }
     else {
-        console.log(results[0].ProductName + ' is available!\n');
+        console.log(requestedItem + ' is available!\n');
         waitingAnimation(processOrder);
     }
 }
@@ -129,9 +136,17 @@ function processOrder() {
         }
         else {
             readDB(queryCols1, function(result) {
-                currentDept = result[0].DepartmentName;
-                transactionSalesTot = requestedUnits * result[0].Price;
-                console.log('=== Total Purchase ===\n' + 'Product: ' + result[0].ProductName + '\nQty Purchased: ' + requestedUnits + '\nTotal: $' + transactionSalesTot.toFixed(2));
+                result.forEach(function(item) {
+                    if (item.ItemID.toString() === requestedID.toString()) {
+                        availableQty = item.StockQuantity;
+                        requestedItem = item.ProductName;
+                        currentDept = item.DepartmentName;
+                        currentPrice = item.Price;
+                        return; 
+                    } 
+                });
+                transactionSalesTot = requestedUnits * currentPrice;
+                console.log('\n=== Total Purchase ===\n' + 'Product: ' + requestedItem + '\nQty Purchased: ' + requestedUnits + '\nTotal: $' + transactionSalesTot.toFixed(2) + '\n');
                 addTotalSales();
             });
         }
@@ -148,7 +163,6 @@ function addTotalSales() {
             for (var i = 0; i < res.length; i++) {
                 if (res[i].DepartmentName === currentDept) {
                     transactionSalesTot += res[i].TotalSales;
-                    console.log(res[i])
                     connection.query('UPDATE Bamazon.Departments SET TotalSales = ? WHERE DepartmentName = ?', [transactionSalesTot, currentDept], function(err4, res4) {
                         if (err4) {
                             console.log(err4);
