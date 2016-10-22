@@ -1,6 +1,7 @@
 var mysql = require('mysql');
 var prompt = require('prompt');
 var sqlkey = require('./sqlkey.js');
+var Table = require('cli-table');
 
 var queryCols1 = [['ItemID', 'DepartmentName', 'ProductName', 'Price', 'StockQuantity']];
 var queryCols2 = [['ItemID', 'ProductName', 'Price']];
@@ -12,6 +13,10 @@ var connection = mysql.createConnection({
     user: 'root',
     password: sqlkey.key,
     database: 'Bamazon'
+});
+
+var table = new Table({
+    head: ['Item', 'Product', 'Price'], colWidths: [20, 30, 20]
 });
 
 // Pass in properties to prompt module on lines 76 and 77 
@@ -37,10 +42,10 @@ connection.connect(function(err){
     if (err) throw err;
     console.log('connected as id ' + connection.threadId);
 });
-
+/*
 // ==== Challenge #1: Customer View ====
 // Commented out initial creation of table and insertion of rows into DB
-/*
+
 connection.query('CREATE TABLE Bamazon.Products (ItemID INT(4) NOT NULL AUTO_INCREMENT, ProductName VARCHAR(70) NOT NULL, DepartmentName VARCHAR(70) NOT NULL, Price DECIMAL(8,2), StockQuantity INT(6), PRIMARY KEY(ItemID))', function(err, res) {
     if (err) {
         console.log(err);
@@ -82,7 +87,12 @@ function readDB(args, callback) {
 
 // Ask for order, then read DB, then execute evaluation callback
 function getCustOrder(results) {
-    console.log(results)
+    results.forEach(function(item) {
+        table.push(
+            [item.ItemID, item.ProductName, item.Price]
+        );
+    });
+    console.log(table.toString());
     prompt.start();
     prompt.get(schema, function(err, res) {
         if (err) {

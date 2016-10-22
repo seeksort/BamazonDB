@@ -1,7 +1,8 @@
 // ==== Challenge #2: Manager View ====
 var mysql = require('mysql');
 var inquirer = require('inquirer');
-var sqlkey = require('./sqlkey.js')
+var sqlkey = require('./sqlkey.js');
+var Table = require('cli-table');
 
 var connection = mysql.createConnection({
     host: 'localhost',
@@ -20,8 +21,22 @@ var newTotal = 0;
 connection.connect(function(err){
     if (err) throw err;
     console.log('connected as id ' + connection.threadId);
+    grabProductList();
     promptUserMain();
 });
+
+function grabProductList() {
+    connection.query('SELECT * from Bamazon.Products',function(err, res) {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            res.forEach(function(item) {
+                productList.push(item.ProductName);
+            });          
+        }
+    });
+}
 
 function viewProducts(callback) {
     connection.query('SELECT ?? from Bamazon.Products', queryCols1, function(err, res) {
@@ -29,12 +44,15 @@ function viewProducts(callback) {
             console.log(err);
         }
         else {
-            console.log('\n========= Current Inventory =========')
-            console.log(' | ' + 'Item' + ' | ' + 'Product' + ' | ' + 'Unit Prc' + ' | '+ 'Qty.' + ' | ');
-            res.forEach(function(item) {
-                productList.push(item.ProductName);
-                console.log(' | ' + item.ItemID + ' | ' + item.ProductName +' | $' + item.Price + ' | ' + item.StockQuantity + ' | ')
+            var table = new Table({
+                head: ['Item', 'Product', 'Price', 'Qty.'], colWidths: [8, 30, 12, 6]
             });
+            res.forEach(function(item) {
+                table.push(
+                    [item.ItemID, item.ProductName, item.Price, item.StockQuantity]
+                );
+            });
+            console.log(table.toString());
             console.log('\n')
             if (typeof callback === 'function'){
                 callback();            
@@ -47,11 +65,15 @@ function viewLowInv(callback) {
     connection.query('SELECT ?? from Bamazon.Products WHERE StockQuantity < 5', queryCols1, function(err, res) {
         if (err) throw err;
         else {
-            console.log('\n=========== Low Inventory ===========')
-            console.log(' | ' + 'Item' + ' | ' + 'Product' + ' | ' + 'Unit Prc' + ' | '+ 'Qty.' + ' | ');
-            res.forEach(function(item) {
-                console.log(' | ' + item.ItemID + ' | ' + item.ProductName +' | $' + item.Price + ' | ' + item.StockQuantity + ' | ')
+            var table = new Table({
+                head: ['Item', 'Product', 'Price', 'Qty.'], colWidths: [8, 30, 12, 6]
             });
+            res.forEach(function(item) {
+                table.push(
+                    [item.ItemID, item.ProductName, item.Price, item.StockQuantity]
+                );
+            });
+            console.log(table.toString());
             console.log('\n')
             if (typeof callback === 'function'){
                 callback();            
@@ -164,7 +186,7 @@ function addNewProduct() {
                 }
             }
             else {
-                console.log('Product add cancelled.');
+                console.log('Product add cancelled.\n');
                 continueApp();
             }    
         });
@@ -193,7 +215,6 @@ function promptUserMain(){
                 break;
             default:
                 console.log('Nothing selected');
-                
                 break;
         }
     });

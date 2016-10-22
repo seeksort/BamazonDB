@@ -17,30 +17,30 @@ var table = new Table({
     head: ['DepartmentID', 'DepartmentName', 'OverHeadCosts', 'ProductSales', 'TotalProfit']
   , colWidths: [20, 20, 20, 20, 20]
 });
+/*
+connection.query('CREATE TABLE Bamazon.Departments (DepartmentID INT(02) NOT NULL AUTO_INCREMENT, DepartmentName VARCHAR(70) NOT NULL, OverHeadCosts DECIMAL(10,2), TotalSales DECIMAL(10,2), PRIMARY KEY(DepartmentID))', function(err, res) {
+    if (err) {
+        console.log(err);
+    }
+    else {
+        connection.query('INSERT INTO Bamazon.Departments (DepartmentName, OverHeadCosts, TotalSales) VALUES ?', [[
+                ['Electronics', 5000, 0],
+                ['Grocery', 3000, 0],
+                ['Books', 3500, 0],
+                ['Music', 1000, 0],
+                ['Movies', 1000, 0]
+            ]], function(err, res) {
+            if (err) {
+                console.log(err);
+            }
+            else {
+                connection.end();
+            }
+        });
 
-// connection.query('CREATE TABLE Bamazon.Departments (DepartmentID INT(02) NOT NULL AUTO_INCREMENT, DepartmentName VARCHAR(70) NOT NULL, OverHeadCosts DECIMAL(10,2), TotalSales DECIMAL(10,2), PRIMARY KEY(DepartmentID))', function(err, res) {
-//     if (err) {
-//         console.log(err);
-//     }
-//     else {
-//         connection.query('INSERT INTO Bamazon.Departments (DepartmentName, OverHeadCosts, TotalSales) VALUES ?', [[
-//                 ['Electronics', 50000, 0],
-//                 ['Grocery', 30000, 0],
-//                 ['Books', 35000, 0],
-//                 ['Music', 10000, 0],
-//                 ['Movies', 10000, 0]
-//             ]], function(err, res) {
-//             if (err) {
-//                 console.log(err);
-//             }
-//             else {
-//                 connection.end();
-//             }
-//         });
-
-//     }
-// });
-
+    }
+});
+/*/
 //Check connection
 connection.connect(function(err){
     if (err) throw err;
@@ -103,7 +103,7 @@ function addNewDept() {
         }]).then(function(ans){
             if (ans.userConfirm === 'Yes') {
                 connection.query('INSERT INTO Bamazon.Departments (DepartmentName, OverHeadCosts, TotalSales) VALUES ?', 
-                [[[newDept, 50000, 0]]], function(err, res) {
+                [[[newDept, 1000, 0]]], function(err, res) {
             if (err) {
                 console.log(err);
             }
