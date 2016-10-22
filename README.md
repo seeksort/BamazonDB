@@ -6,6 +6,6 @@ It was neat thinking through different user perspectives for this one. I added c
 
 I wound up using the Prompt and Inquirer modules, because the Bamazon Customer spec said to use Prompt, but I needed the ability to list options for the Manager and Executive specs, which I did not read until I was finished with Bamazon Customer -_-. 
 
-[Youtube demo](https://www.youtube.com/watch?v=Bp788k2MFpI)
+[Youtube demo](https://youtu.be/idcSANyXcq4)
 
 <img src="screenshot.png" alt="Manager view of current inventory and update option" width="450">
