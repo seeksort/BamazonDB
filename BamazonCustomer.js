@@ -39,13 +39,19 @@ connection.connect(function(err){
 });
 
 // ==== Challenge #1: Customer View ====
-// Commented out initial insertion of rows into DB
+// Commented out initial creation of table and insertion of rows into DB
 /*
+connection.query('CREATE TABLE Bamazon.Products (ItemID INT(4) NOT NULL AUTO_INCREMENT, ProductName VARCHAR(70) NOT NULL, DepartmentName VARCHAR(70) NOT NULL, Price DECIMAL(8,2), StockQuantity INT(6), PRIMARY KEY(ItemID))', function(err, res) {
+    if (err) {
+        console.log(err);
+    }
+});
+
 connection.query('INSERT INTO Bamazon.Products (ProductName, DepartmentName, Price, StockQuantity) VALUES ?', [[
         ['Drone', 'Electronics', 899.00, 120],
         ['Soylent 12 ct', 'Grocery', 32.30, 123],
         ['MacBook Pro', 'Electronics', 1292.34, 100],
-        ['JavaScript for Dummies', 'Books', 25.49, 65],
+        ['JavaScript for Dummies', 'Books', 25.49, 4],
         ['St. Vincent', 'Music', 10.00, 30],
         ['Remain in Light', 'Music', 6.99, 22],
         ['Airplane!', 'Movies', 5.46, 17],
@@ -55,6 +61,9 @@ connection.query('INSERT INTO Bamazon.Products (ProductName, DepartmentName, Pri
     ]], function(err, res) {
     if (err) {
         console.log(err);
+    }
+    else {
+        connection.end()
     }
 });
 */
